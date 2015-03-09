@@ -10,35 +10,34 @@ var Keyer = function(init)
 
   var keyables = [];
   var callbackQueue = [];
-  var evtQueue = [];
+  var evtQueue = []; //1 = down, 0 = up
+  var codeQueue = [];
   self.register = function(keyable) { keyables.push(keyable); }
   self.unregister = function(keyable) { var i = keyables.indexOf(keyable); if(i != -1) keyables.splice(i,1); }
   self.clear = function() { keyables = []; }
-  function preventFault(evt) { if(evt.keyCode == 8) { evt.preventDefault(); return false; } };
   self.attach = function() //will get auto-called at creation
   {
-    document.addEventListener('keypress', key, false);
-    document.addEventListener('keydown', preventFault, false);
-    document.addEventListener('keyup', preventFault, false);
+    document.addEventListener('keydown', keyd, false);
+    document.addEventListener('keyup', keyu, false);
   }
   self.detach = function()
   {
-    document.removeEventListener('keypress', key);
-    document.removeEventListener('keydown', preventFault);
-    document.removeEventListener('keyup', preventFault);
+    document.removeEventListener('keydown', keyd);
+    document.removeEventListener('keyup', keyu);
   }
 
-  function key(evt)
+  function keyu(evt) { return key(evt, 0); }
+  function keyd(evt) { return key(evt, 1); }
+  function key(evt,type)
   {
-    var code;
-    if((code = evt.charCode) == 13) code = 32;
-    var k = String.fromCharCode(code).toLowerCase();
-    if(k != "")
+    var code = evt.keyCode;;
+    if(code != 8)
     {
       for(var i = 0; i < keyables.length; i++)
       {
         callbackQueue.push(keyables[i].key);
-        evtQueue.push(k);
+        evtQueue.push(type);
+        codeQueue.push(code);
       }
     }
     evt.preventDefault();
@@ -47,9 +46,10 @@ var Keyer = function(init)
   self.flush = function()
   {
     for(var i = 0; i < callbackQueue.length; i++)
-      callbackQueue[i](evtQueue[i]);
+      callbackQueue[i](evtQueue[i],codeQueue[i]);
     callbackQueue = [];
     evtQueue = [];
+    codeQueue = [];
   }
 
   self.attach();
@@ -60,6 +60,6 @@ var Keyable = function(args)
 {
   var self = this;
 
-  self.key = args.key ? args.key : function(){};
+  self.key = args.key ? args.key : function(type, code){};
 }
 

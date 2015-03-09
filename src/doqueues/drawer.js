@@ -8,6 +8,10 @@ var Drawer = function(init)
   var self = this;
   doMapInitDefaults(self,init,default_init);
 
+  self.shakeamt = 0;
+  self.shakex = 0;
+  self.shakey = 0;
+
   var drawables = [];
   self.register = function(drawable) { drawables.push(drawable); }
   self.unregister = function(drawable) { var i = drawables.indexOf(drawable); if(i != -1) drawables.splice(i,1); }
@@ -18,7 +22,19 @@ var Drawer = function(init)
   self.flush = function()
   {
     for(var i = 0; i < drawables.length; i++)
-      drawables[i].draw(self.source);
+      drawables[i].draw(self.source,self.shakex,self.shakey);
+  }
+
+  self.tick = function()
+  {
+    self.shakeamt *= 0.8;
+    self.shakex = ((Math.random()*2)-1)*self.shakeamt;
+    self.shakey = ((Math.random()*2)-1)*self.shakeamt;
+  }
+
+  self.shake = function(amt)
+  {
+    self.shakeamt = amt;
   }
 
   self.attach();
